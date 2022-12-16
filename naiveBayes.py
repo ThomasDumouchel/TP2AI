@@ -8,20 +8,20 @@ ex = TP2Extractor()
 ex.extract('interest.acl94.txt')
 
 # convert X to a pandas dataframe
-wordX = pd.DataFrame(ex.getWordX())
-groupX = pd.DataFrame(ex.getGroupX())
-y = pd.DataFrame(ex.getY())
+wordX = pd.DataFrame(ex.getWordX())         # wordX, c'est nos vecteurs d'attributs avant deux mots avant et après le mot interest
+groupX = pd.DataFrame(ex.getGroupX())       # groupX, c'est nos vecteurs d'attributs après le groupe des deux mots avant et après le mot interest
+y = pd.DataFrame(ex.getY())                 # y, c'est notre étiquette, donc le sens du mot interest
 
 print(wordX.head())
 print(groupX.head())
 
-# create a Gaussian Naive Bayes classifier
-clf = GaussianNB()
+# # create a Gaussian Naive Bayes classifier
+# clf = GaussianNB()
 
-# train the classifier
-clf.fit(wordX, y)
+# # train the classifier
+# clf.fit(wordX, y)
 
-# test the classifier
-print(clf.predict([['interest', 'NN', 'is', 'VBZ'], ['interest', 'NN', 'is', 'VBZ']]))
+# # test the classifier
+# print(clf.predict([['interest', 'NN', 'is', 'VBZ'], ['interest', 'NN', 'is', 'VBZ']]))
 
 

@@ -126,4 +126,5 @@ class TP2Extractor(object):
 
 ex = TP2Extractor()
 ex.extract('interest.acl94.txt')
-# print(ex.getGroupX())
+print(ex.getGroupX()[:3])
+print(ex.getWordX()[:3])

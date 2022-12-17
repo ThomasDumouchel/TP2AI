@@ -12,6 +12,13 @@ from sklearn.model_selection import train_test_split
 
 STRING_PATTERN = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest_[0-6]\/NN\s+\]?\[?\s*\S+\s+\]?\[?\s*\S+"
 
+'''
+Function to extract features from a file
+
+Creates a list of feature vecots of windo size 2.
+
+Source : https://practicaldatascience.co.uk/machine-learning/how-to-use-count-vectorization-for-n-gram-analysis
+'''
 def feature_extractor(path):
     if not os.path.isfile(path):
             raise Exception('File not found')
@@ -27,9 +34,9 @@ def feature_extractor(path):
         v = create_feature_vector(cleaned)
         vectors.append(v)
        
+    # returns a list of vectors like this ['declines', 'NNS', 'in', 'IN', 'rates', 'NNS', '.', 'PUNCT']
         
-    print(vectors[:5])
-    
+    return vectors
         
 
 '''
@@ -47,8 +54,16 @@ and returns a list with the format:
 '''
 def create_feature_vector(s):
     vector = []
+    
+    # sense corresponds to the sense of the word interest, 
+    # we just keep the number ex: 5 -> interest_5
+    sense = None
+    
     for word in s.split():
-        if word == "$$" or word[0] == "=" or len(word) >= 8 and word[:8] == "interest":
+        if len(word) >= 8 and word[:8] == "interest": 
+            sense = int(word[9:10])
+            continue
+        if word == "$$" or word[0] == "=":
             continue
         
         info = word.split('/')
@@ -59,7 +74,7 @@ def create_feature_vector(s):
             else:
                 vector.append(info[1])        
                 
-    return vector
+    return (sense, vector)
     
 
 
@@ -67,6 +82,9 @@ def create_feature_vector(s):
 Naive Bayes
 
 Source : https://www.datacamp.com/tutorial/naive-bayes-scikit-learn
+
+To use the Multilabelbinarizer : https://www.kaggle.com/questions-and-answers/66693
+
 '''
 from sklearn.naive_bayes import GaussianNB
 from sklearn import metrics
@@ -79,13 +97,14 @@ def naive_bayes(data, target):
     gnb = GaussianNB()
     
     # Train the model using the training sets
+    print(y_train[0])
     gnb.fit(X_train, y_train)
     
     # Predict the response for test dataset
     y_pred = gnb.predict(X_test)
     
     # Model Accuracy, how often is the classifier correct?
-    print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy of Naive Bayes:",metrics.accuracy_score(y_test, y_pred))
 
 
 ''' 
@@ -104,7 +123,7 @@ def decision_tree(data, target):
     y_pred = clf.predict(X_test)
     
     # Model Accuracy, how often is the classifier correct?
-    print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy of the Decision Tree:",metrics.accuracy_score(y_test, y_pred))
 
 ''' 
 Random Forest
@@ -115,7 +134,7 @@ from sklearn.ensemble import RandomForestClassifier
 def random_forest(data, target):
     X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3)
     
-    # Create a Gaussian Classifier
+    # Create a Random Forest Classifier
     clf = RandomForestClassifier(n_estimators=100)
     
     # Train the model using the training sets y_pred=clf.predict(X_test)
@@ -123,7 +142,7 @@ def random_forest(data, target):
     
     y_pred = clf.predict(X_test)
     
-    print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy of the Random Forest:",metrics.accuracy_score(y_test, y_pred))
 
 ''' 
 SVM
@@ -145,7 +164,7 @@ def support_vector_machines(data, target):
     y_pred = clf.predict(X_test)
     
     # Model Accuracy: how often is the classifier correct?
-    print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy of the Support Vector Machines:",metrics.accuracy_score(y_test, y_pred))
 
 
 ''' 
@@ -168,17 +187,41 @@ def mlp(data, target):
     y_pred = clf.predict(X_test)
     
     # Model Accuracy: how often is the classifier correct?
-    print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy of the Multilayer Perceptron:",metrics.accuracy_score(y_test, y_pred))
 
+'''
+Main function that extract the features and call the classifiers
+
+'''
 from sklearn import datasets
+from sklearn.preprocessing import MultiLabelBinarizer
 def main():
-    #feature_extractor("interest.acl94.txt")
-    wine = datasets.load_wine()
-    # naive_bayes(wine.data, wine.target)
-    # decision_tree(wine.data, wine.target)
-    # random_forest(wine.data, wine.target)
-    # support_vector_machines(wine.data, wine.target)
-    mlp(wine.data, wine.target)
+    vectors = feature_extractor("interest.acl94.txt")
+    target, data = list(zip(*vectors))
+    
+    
+    '''
+    We use a multilabelbinarizer to transform the data into matrix intead of a list of strings
+    '''
+    # create a multilabelbinarizer object
+    mlb = MultiLabelBinarizer()
+    
+    data_2 = mlb.fit_transform(data)
+
+    # target_2 = mlb.fit_transform(target)
+    # print(data_2[0])
+    # print(target_2[0])
+    
+    # wine = datasets.load_wine()
+    
+    # [[] []]
+    # print(wine.target[:])
+    
+    naive_bayes(data_2, target)
+    decision_tree(data_2, target)
+    random_forest(data_2, target)
+    support_vector_machines(data_2, target)
+    # mlp(wine.data, wine.target)
     print("Hello World")
     pass
 

@@ -124,6 +124,6 @@ class TP2Extractor(object):
                     # for debugging purposes
                     print('interest not found in sentence: ' + line)
 
-# ex = TP2Extractor()
-# ex.extract('interest.acl94.txt')
-# print(ex.getWordX())
+ex = TP2Extractor()
+ex.extract('interest.acl94.txt')
+# print(ex.getGroupX())

@@ -12,8 +12,8 @@ wordX = pd.DataFrame(ex.getWordX())         # wordX, c'est nos vecteurs d'attrib
 groupX = pd.DataFrame(ex.getGroupX())       # groupX, c'est nos vecteurs d'attributs après le groupe des deux mots avant et après le mot interest
 y = pd.DataFrame(ex.getY())                 # y, c'est notre étiquette, donc le sens du mot interest
 
-print(wordX.head())
-print(groupX.head())
+print(wordX.shape())
+
 
 # # create a Gaussian Naive Bayes classifier
 # clf = GaussianNB()

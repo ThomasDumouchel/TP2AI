@@ -1,3 +1,5 @@
+import numpy as np
+
 '''
 Word Sense Disambiguation (WSD) using sklearn
 '''
@@ -9,8 +11,6 @@ import re
 import os
 from matplotlib import pyplot as plt
 import numpy as np
-
-
 
 '''
 Function to extract features from a file
@@ -24,8 +24,9 @@ def pre_process_text(text_path, stop_list_path):
     stop_list_words = [word for word in open(stop_list_path, 'r').read().split('\n') if word != '']
     text = open(text_path, 'r').read()
     text = re.sub(r"=*", '', text)
-    text = re.sub(r"[\[\]]\s", ' ', text)
-    for i, word in enumerate(stop_list_words):
+
+    ## Remove stop words
+    for word in stop_list_words:
         text = re.sub(r"\b" + word.lower() + r"\/\S*\s", '', text, flags=re.IGNORECASE)
         
     new_file = open('processed_text.txt', 'w')
@@ -38,7 +39,7 @@ Creates a list of feature vecots of windo size 2.
 
 Source : https://practicaldatascience.co.uk/machine-learning/how-to-use-count-vectorization-for-n-gram-analysis
 '''
-STRING_PATTERN = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s*\S+"
+STRING_PATTERN = r"\S+\s*\]?\s*\[?\s+\S+\s*\]?\s*\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\s*\[?\s*\S+\s+\]?\s*\[?\s*\S+"
 
 def feature_extractor(path):
     if not os.path.isfile(path):
@@ -103,7 +104,7 @@ def create_feature_vector(s):
     ## TODO: make sure not to take words of last sentence in my vector
     ## TODO: make sure all my vectors are of the same size
 
-    return (sense, vector)
+    return (sense, np.array(vector))
     
 
 
@@ -287,11 +288,10 @@ def plot_confusion_matrix(model, X_test, y_test, cmap=plt.cm.Blues, normalize=Fa
                     color="white" if cm[i, j] > thresh else "black")
     fig.tight_layout()
     return ax
-
+    
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import OneHotEncoder
-from numpy import array
 
 class ManyHotTransformer(BaseEstimator, TransformerMixin):
 
@@ -315,42 +315,54 @@ class ManyHotTransformer(BaseEstimator, TransformerMixin):
     '''
 
     def transform(self, X, y=None):
-        transformed_X = array([])
+        words = set()
+        # get all the words in the dataset for the one-hot encoding classes_
         for data in X:
-            data_encoding = array([])
             for word in data:
+                words.add(word)
+        # create a one-hot encoder
+        enc = OneHotEncoder()
+        enc.fit(np.array(list(words)).reshape(-1, 1))
+
+        transformed_X = np.zeros((len(X), 8*len(words)))
+        for i, data in enumerate(X):
+            encodings = np.zeros((8, len(words)))
+            for j, word in enumerate(data):
                 #get one-hot encoding of the word
-                word_encoding = array([])
-
-                data_encoding.append(word_encoding)
-            transformed_X.append(data_encoding)
-        return transformed_X
-
+                word_encoding = enc.transform(np.array([word]).reshape(-1, 1)).toarray()[0]
+                encodings[j] = word_encoding
+            transformed_X[i] = encodings.reshape((1, -1))
+        return np.array(transformed_X)
 
 '''
 Main function that extract the features and call the classifiers
 
 '''
-from sklearn import datasets
 from sklearn.preprocessing import MultiLabelBinarizer
+
+
 def main():
     #vectors = feature_extractor("interest.acl94.txt")
     vectors = feature_extractor("processed_text.txt")
 
     target, data = list(zip(*vectors))
-    
+
     '''
     We use a multilabelbinarizer to transform the data into matrix intead of a list of strings
     '''
 
-    # create a multilabelbinarizer object
-    mlb = MultiLabelBinarizer()
+    ## create a multilabelbinarizer object
+    transformer = MultiLabelBinarizer() # DOESN'T CONSIDER THE ORDER OF THE WORDS
+
     ## TODO: make a custom transformer/preprocessing that map tuple of words into matrix of one hot vectors
     ## Why? Because mutliLabelBinarizer return a list with 1s and 0s, irrespective of the order of the words
-    
-    data_2 = mlb.fit_transform(data)
 
-    # splits = train_test_split(data_2, target, test_size=0.3) # UNSTRATIFIED
+    #transformer = ManyHotTransformer() # DOES CONSIDER THE ORDER OF THE WORDS. But outputs 3D array, which is not supported by sklearn classifiers
+    #
+    
+    data_2 = transformer.fit_transform(data)
+
+    #splits = train_test_split(data_2, target, test_size=0.3) # UNSTRATIFIED
     # Since we want to compare the different classifiers, we need to split the data in the same way
     # Since the classes are not balanced, we use stratify to make sure the split is done in a balanced way
     # That means that the proportion of each class in the train and test set is the same as in the original dataset
@@ -360,7 +372,7 @@ def main():
     decision_tree(splits)
     random_forest(splits)
     support_vector_machines(splits)
-    #mlp(splits)
+    # mlp(splits)
     pass
 
 if __name__ == "__main__":

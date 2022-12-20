@@ -354,6 +354,10 @@ def main():
 
     target, data = list(zip(*vectors))
 
+    for d in data:
+        if len(d) != 8:
+            print(len(d))
+            print(d)
     '''
     We use a multilabelbinarizer to transform the data into matrix intead of a list of strings
     '''

@@ -7,7 +7,7 @@ Feature Extractor
 '''
 import re
 import os
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -25,6 +25,10 @@ def pre_process_text(text_path, stop_list_path):
     text = open(text_path, 'r').read()
     text = re.sub(r"=*", '', text)
     text = re.sub(r"[\[\]]\s", ' ', text)
+
+    # replace all $$ with unk/unk
+    text = re.sub(r"\$\$", 'unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk', text)
+
     for i, word in enumerate(stop_list_words):
         text = re.sub(r"\b" + word.lower() + r"\/\S*\s", '', text, flags=re.IGNORECASE)
         
@@ -38,14 +42,17 @@ Creates a list of feature vecots of windo size 2.
 
 Source : https://practicaldatascience.co.uk/machine-learning/how-to-use-count-vectorization-for-n-gram-analysis
 '''
-STRING_PATTERN = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s*\S+"
+STRING_PATTERN_1 = r"\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+"
+STRING_PATTERN_2 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s*\S+"
+STRING_PATTERN_3 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s+\S+\s*\]?\[?\s*\S+"
+STRING_PATTERN_4 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s*\S+"
 
 def feature_extractor(path):
     if not os.path.isfile(path):
             raise Exception('File not found')
     
-    file  = open(path, 'r').read()
-    regular_expression = re.compile(STRING_PATTERN)
+    file = open(path, 'r').read()
+    regular_expression = re.compile(STRING_PATTERN_2)
     matches = regular_expression.findall(file)
     
     vectors = []
@@ -338,7 +345,11 @@ def main():
     vectors = feature_extractor("processed_text.txt")
 
     target, data = list(zip(*vectors))
-    
+
+    for d in data:
+        if len(d) != 8:
+            print(len(d))
+            print(d)
     '''
     We use a multilabelbinarizer to transform the data into matrix intead of a list of strings
     '''
@@ -357,9 +368,9 @@ def main():
     splits = train_test_split(data_2, target, test_size=0.3, stratify=target) # STRATIFIED
     
     naive_bayes(splits)
-    decision_tree(splits)
-    random_forest(splits)
-    support_vector_machines(splits)
+    #decision_tree(splits)
+    #random_forest(splits)
+    #support_vector_machines(splits)
     #mlp(splits)
     pass
 

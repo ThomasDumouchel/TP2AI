@@ -21,7 +21,7 @@ Source : https://practicaldatascience.co.uk/machine-learning/how-to-use-count-ve
 '''
 def pre_process_text(text_path, stop_list_path):
     # remove all the stop words from the text of
-    stop_list_words = [word for word in open(stop_list_path, 'r').read().split('\n') if word != '']
+    #stop_list_words = [word for word in open(stop_list_path, 'r').read().split('\n') if word != '']
     text = open(text_path, 'r').read()
     text = re.sub(r"=*", '', text)
 
@@ -29,8 +29,8 @@ def pre_process_text(text_path, stop_list_path):
     text = re.sub(r"\$\$", 'unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk unk/unk', text)
 
     ## Remove stop words
-    for word in stop_list_words:
-        text = re.sub(r"\b" + word.lower() + r"\/\S*\s", '', text, flags=re.IGNORECASE)
+    #for word in stop_list_words:
+        #text = re.sub(r"\s" + word.lower() + r"\/\S*", '', text, flags=re.IGNORECASE)
         
     new_file = open('processed_text.txt', 'w')
     new_file.write(text)
@@ -42,10 +42,10 @@ Creates a list of feature vecots of windo size 2.
 
 Source : https://practicaldatascience.co.uk/machine-learning/how-to-use-count-vectorization-for-n-gram-analysis
 '''
-STRING_PATTERN_1 = r"\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+"
-STRING_PATTERN_2 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s*\S+"
-STRING_PATTERN_3 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s+\S+\s*\]?\[?\s*\S+"
-STRING_PATTERN_4 = r"\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s+interest[s]?_[0-6]\/NN[S]?\s+\]?\[?\s*\S+\s+\]?\[?\s+\S+\s*\]?\[?\s+\S+\s*\]?\[?\s*\S+"
+STRING_PATTERN_1 = r"(?:\S+\/\S+[\s\[\]]+){1}interest[s]?_[0-6]\/NN[S]?(?:[\s\[\]]+\S+\/\S+){1}"
+STRING_PATTERN_2 = r"(?:\S+\/\S+[\s\[\]]+){2}interest[s]?_[0-6]\/NN[S]?(?:[\s\[\]]+\S+\/\S+){2}"
+STRING_PATTERN_3 = r"(?:\S+\/\S+[\s\[\]]+){3}interest[s]?_[0-6]\/NN[S]?(?:[\s\[\]]+\S+\/\S+){3}"
+STRING_PATTERN_4 = r"(?:\S+\/\S+[\s\[\]]+){4}interest[s]?_[0-6]\/NN[S]?(?:[\s\[\]]+\S+\/\S+){4}"
 
 
 def feature_extractor(path):
@@ -354,10 +354,6 @@ def main():
 
     target, data = list(zip(*vectors))
 
-    for d in data:
-        if len(d) != 8:
-            print(len(d))
-            print(d)
     '''
     We use a multilabelbinarizer to transform the data into matrix intead of a list of strings
     '''
@@ -373,22 +369,22 @@ def main():
     
     data_2 = transformer.fit_transform(data)
 
-    #splits = train_test_split(data_2, target, test_size=0.3) # UNSTRATIFIED
+    splits = train_test_split(data_2, target, test_size=0.3) # UNSTRATIFIED
     # Since we want to compare the different classifiers, we need to split the data in the same way
     # Since the classes are not balanced, we use stratify to make sure the split is done in a balanced way
     # That means that the proportion of each class in the train and test set is the same as in the original dataset
-    splits = train_test_split(data_2, target, test_size=0.3, stratify=target) # STRATIFIED
+    # splits = train_test_split(data_2, target, test_size=0.3, stratify=target) # STRATIFIED
     
     naive_bayes(splits)
-    #decision_tree(splits)
-    #random_forest(splits)
-    #support_vector_machines(splits)
-    #mlp(splits)
+    decision_tree(splits)
+    random_forest(splits)
+    support_vector_machines(splits)
+    mlp(splits)
     pass
 
 if __name__ == "__main__":
+    pre_process_text("interest.acl94.txt", "stoplist-english.txt")
     main()
-    #pre_process_text("interest.acl94.txt", "stoplist-english.txt")
-    
+
 ## TODO: tester avec differentes taille de fenetre pour un seul algo et supposez que c'est similaire pour tous
 
